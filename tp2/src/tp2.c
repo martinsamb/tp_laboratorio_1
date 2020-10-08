@@ -15,7 +15,7 @@
 #include "ArrayEmployees.h"
 
 
-#define QTY_ARRAY_TIPO 10
+#define QTY_ARRAY_TIPO 1000
 #define SORT_UP 1
 #define SORT_DOWN 0
 
@@ -25,12 +25,7 @@ int main()
     int opcionOrdenar;
     int contadorIdemployee=0;
     int flag=0;
-    /*
-    float sumSalary;
-    float aveSalary = 0;
-    float qtySalary;
-    aveSalary = sumSalary/qtySalary;
-    */
+
     Employee arrayEmployee[QTY_ARRAY_TIPO];
     initEmployees(arrayEmployee, QTY_ARRAY_TIPO);
 
