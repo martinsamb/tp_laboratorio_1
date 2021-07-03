@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include "utn.h"
 #include "ArrayEmployees.h"
-//#include "sth"
 
 #define  CANT_DIG_MIN   1
 #define  CANT_DIG_MAX   10
@@ -106,18 +105,16 @@ int addEmployees(eVenta* list, int len, int* id)
     int pos;
     if(list!=NULL && len>0 && id!=NULL)
     {
-        //if(employee_buscarEmpty(list,len,&posicion)==-1)
-        //if(findEmptyEmployee(list,len,&id)==-1)
     	if(findEmptyEmployee(list, len, &pos) == -1)
         {
             printf("\nNo hay lugares vacios");
         }
         else
         {
-        	if(utn_getName("\nNombre: ","\nError",1, TEXT_SIZE, 1, list[pos].name) == 0 &&
-        	   utn_getName("\nApellido: ","\nError",1, TEXT_SIZE, 1, list[pos].lastName) == 0 &&
-			   utn_getFloat("\nSalario: ","\nError", 1, 10000, 2,&list[pos].salary) == 0 &&
-			   utn_getUnsignedInt("\nSector: ", "\nError",1,sizeof(int),1,&list[pos].sector) == 0)
+        	if(utn_getCadena(list[pos].name,"\nNombre: ","\nError: ",1,400, 2)==0 &&
+        	   utn_getCadena(list[pos].lastName,"\nApellido", "\nError: ",1,600,2)==0 &&
+			   utn_getNumeroFlotante(&list[pos].salary,"\nSalario: ","\nError",1.0,100000.0,2)==0 &&
+			   utn_getNumero(&list[pos].sector, "\nSector:","\nError",1,10000, 2)==0)
         	{
 				(*id)++;
 				list[pos].idUnico=*id;
@@ -146,7 +143,8 @@ int removeEmployee(eVenta* list, int len)
     int id;
     if(list!=NULL && len>0)
     {
-        utn_getUnsignedInt("\nID a cancelar: ","\nError",1,sizeof(int),1,&id);
+    	printEmployees(list, len);
+        utn_getNumero(&id,"\nID a cancelar: ","\nError",1,10000,2);
         if(findEmployeeById(list,len,id,&pos)==-1)
         {
             printf("\nNo existe este ID");
@@ -164,6 +162,7 @@ int removeEmployee(eVenta* list, int len)
             retorno=0;
         }
     }
+    printEmployees(list, len);
     return retorno;
 }
 
@@ -180,10 +179,11 @@ int modifyEmployees(eVenta* list, int len)
     int retorno=-1;
     int pos;
     int id;
-    char opcion;
+    int opcion;
     if(list!=NULL && len>0)
     {
-        utn_getUnsignedInt("\nID a modificar: ","\nError",1,sizeof(int),1,&id);
+        printEmployees(list, len);
+        utn_getNumero(&id,"\nID a modificar: ","\nError",1, 10000,2);
         if(findEmployeeById(list,len,id,&pos)==-1)
         {
             printf("\nNo existe este ID");
@@ -193,30 +193,31 @@ int modifyEmployees(eVenta* list, int len)
             do
             {   //copiar printf de alta
                 printf("\nID: %d\nNombre: %s\nApellido: %s\n Salario: %.2f\nSector: %d",
-                    list[pos].idUnico,list[pos].name,list[pos].lastName,list[pos].salary,list[pos].sector);
-                utn_getLetra("\n\nModificar ID: \n\nA-Nombre \nB-Apellido \nC-Salario \nD-Sector \nS-Salir\n","\nError",1,&opcion);
+                list[pos].idUnico,list[pos].name,list[pos].lastName,list[pos].salary,list[pos].sector);
+                utn_getNumero(&opcion,"\n\nModificar ID: \n\n1-Nombre \n2-Apellido \n3-Salario \n4-Sector \n5-Salir\n","\nError",1,5,2);
                 switch(opcion)
                 {
-                    case 'A':
-                    	utn_getName("\nNombre: ","\nError",1,TEXT_SIZE,1,list[pos].name);
+                    case 1 :
+                    	utn_getCadena(list[pos].name,"\nNombre: ","\nError: ",1,400, 2);
                         break;
-                    case 'B':
-                    	utn_getName("\nApellido: ","\nError",1,TEXT_SIZE,1,list[pos].lastName);
+                    case 2 :
+                    	 utn_getCadena(list[pos].lastName,"\nApellido", "\nError: ",1,600,2);
                         break;
-                    case 'C':
-                        utn_getFloat("\nSalario: ","\nError",1,TEXT_SIZE,1,&list[pos].salary);
+                    case 3 :
+                        utn_getNumeroFlotante(&list[pos].salary, "\nSalario: ","\nError",1, 10000, 2);
                         break;
-                    case 'D':
-                        utn_getUnsignedInt("\nSector: ","\nError",1,TEXT_SIZE,1,&list[pos].sector);
+                    case 4 :
+                        utn_getNumero(&list[pos].sector, "\nSector:","\nError",1,10000, 2);
                         break;
-                    case 'S':
+                    case 5 :
                         break;
                     default:
                         printf("\nOpcion no valida");
                 }
-            }while(opcion!='S');
+            }while(opcion!= 5);
             retorno=0;
         }
+        printEmployees(list, len);
     }
     return retorno;
 }
@@ -233,12 +234,12 @@ int sortEmployees(eVenta* list,int len)
 {
     int retorno=-1;
     int i, j;
-    char bufferApellido[TEXT_SIZE];
+    char bufferApellido[LEN_LASTNAME];
     int bufferId;
     int bufferIsEmpty;
     int bufferSector;
     float bufferSalario;
-    char bufferNombre[TEXT_SIZE];
+    char bufferNombre[LEN_NAME];
 
     if(list!=NULL && len>=0)
     {
@@ -294,7 +295,8 @@ int printEmployees(eVenta* list, int len)
         {
             if(list[i].isEmpty==0)
             {
-                printf("\nID: %d    Nombre: %s  Apellido: %s    Salario: %.2f   Sector: %d",list[i].idUnico,list[i].name,list[i].lastName,list[i].salary,list[i].sector);
+                printf("\nID: %d    Nombre: %s  Apellido: %s    Salario: %.2f   Sector: %d",
+                		list[i].idUnico,list[i].name,list[i].lastName,list[i].salary,list[i].sector);
             }
         }
         retorno=0;

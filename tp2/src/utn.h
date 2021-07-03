@@ -1,45 +1,33 @@
+/*
+ * utn.h
+ *
+ *  Created on: 11 oct. 2020
+ *      Author: marti
+ */
 
 #ifndef UTN_H_
 #define UTN_H_
 
+#define ARRAY_LEN_STRING 4096
+#define ARRAY_LEN_INT 64
+#define ARRAY_LEN_NOMBRE 30
+#define ARRAY_LEN_APELLIDO 60
+#define LEN_CHAR 2
+#define ARRAY_LEN_DNI 11
+#define ARRAY_LEN_CUIT 14
+#define ARRAY_LEN_TEL 20
 
-int getString(char* msg, char* msgError, int min, int max, int* reintentos, char* resultado);
-
-int utn_getName(char* msg,char* msgError,int min,int max,int reintentos,char* resultado);
-int isValidName(char* stringRecibido);
-
-int utn_getUnsignedInt(char* msg,char* msgError,int minSize,int maxSize,int reintentos,int* input);
-int isValidNumber(char* stringRecibido);
-
-int utn_getSignedInt(char* msg, char* msgError, int minSize, int maxSize, int reintentos, int* input);
-int isValidSignedNumber(char* stringRecibido);
-
-int utn_getFloat(char* msg, char* msgError, int minSize, int maxSize, int reintentos, float* input);
-int isValidFloatNumber(char* stringRecibido);
-
-int utn_getTelefono(char* msg, char* msgError, int minSize, int maxSize, int min, int max, int reintentos, char* input);
-int isValidTelephone(char* stringRecibido);
-
-int utn_getDNI(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input);
-int isValidDNI(char* stringRecibido);
-
-int utn_getCUIT(char* msg, char* msgError, int reintentos, char* input);
-int isValidCUIT(char* stringRecibido);
-
-int utn_getEmail(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input);
-int isValidEmail(char* stringRecibido);
-
-int utn_getTexto(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input);
-int isValidTexto(char* stringRecibido);
-
-int utn_getAlfanumerico(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input);
-int isValidAlphanumeric(char* stringRecibido);
-
-int utn_getLetra(char* msg, char* msgError, int reintentos, char* resultado);
-int isValidLetra(char charRecibido);
-
-int utn_getDate(char* msg, char* msgError, int reintentos, char* input);
-int isValidDate(char* stringRecibido);
-
+int utn_getNumero(int* pResultado, char* pMensaje, char* pMensajeError, int minimo, int maximo, int reintentos);
+int utn_getNumeroFlotante(float* pResultado, char* pMensaje, char* pMensajeError, int minimo, float maximo, float reintentos);
+int utn_getTexto(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getNombre(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getApellido(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getCaracter(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getDni(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getCuil(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getTelefono(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getCaracterSN(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos);
+int utn_getString(char *pResultado, int len, char* mensaje, char* mensajeError, int reintentos);
+int utn_getCadena(char *pResultado, char *mensaje, char *mensajeError,float minimo, float maximo, int reintentos);
 
 #endif /* UTN_H_ */

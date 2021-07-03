@@ -1,821 +1,1067 @@
+/*
+ * utn.c
+ *
+ *  Created on: 11 oct. 2020
+ *      Author: marti
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "utn.h"
 
-/*
-getString
-utn_getName
-utn_getNumero
-utn_getNumeroConSigno
-utn_getNumeroConDecimales
-utn_getTelefono
-utn_getDNI
-utn_getCUIT
-utn_getEmail
-utn_getTexto
-utn_getAlfanumerico
-utn_getFecha
-*/
 
-/*************************
-*
-*
-*param max Tamaño= elementos+1(\0)
-*
-***************************/
-/** \brief Solicita el ingreso de un string y valida su tamaño
-* \param msg char* Mensaje a mostrar
-* \param msgError char* Mensaje de error a mostrar
-* \param min intTamaño minimo del string
-* \param max intTamaño minimo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param resultado char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) if Error [Invalid length or NULL pointer] - (0) if Ok
-*/
 
-int getString(char* msg, char* msgError, int min, int max, int* reintentos, char* resultado)
+/*********Prototipos*********/
+static int myGets(char cadena[], int leng);
+static int getString(char* array, int len);
+static int getInt(int* pResultado);
+static int esNumerica(char* cadena, int limite);
+static int getFloat(float* pResultado);
+static int esNumericaFloat(char* cadena, int limite);
+static int getTexto(char* pResultado, int longitud);
+static int esTexto(char* cadena,int longitud);
+static int getNombre(char* pResultado, int longitud);
+static int esNombre(char* cadena,int longitud);
+static int getApellido(char* pResultado, int longitud);
+static int esApellido(char* cadena,int longitud);
+static int getCaracter(char* pResultado, int longitud);
+static int esCaracter(char* cadena, int longitud);
+static int getDni(char* pResultado, int longitud);
+static int getCuit(char* pResultado, int longitud);
+static int esDNI(char* cadena, int longitud);
+static int esCUIT(char* cadena, int longitud);
+static int getTelefono(char* pResultado, int longitud);
+static int esTelefono(char* cadena,int longitud);
+static int getCaracterSN(char* pResultado, int longitud);
+static int esCaracterSN(char* cadena, int longitud);
+static int esString(char string[], int leng);
+
+/*********Funciones Estaticas*********/
+/*********GET*********/
+
+static int myGets(char cadena[], int leng)
 {
-    int retorno=-1;
-    char bufferStr[max+10];
-
-    if(msg!=NULL && msgError!=NULL && min<=max && reintentos>=0 && resultado!=NULL)
-    {
-        do
-        {
-            printf("%s",msg);   //no poner salto de linea, se va a pasar en el mensaje por valor
-            fflush(stdin);
-            fgets(bufferStr,sizeof(bufferStr),stdin);
-            bufferStr[strlen(bufferStr)-1]='\0';
-
-            if(strlen(bufferStr)>=min && strlen(bufferStr)<max)    // tamaño (max) =cantidad de elementos (strlen) + 1(\0)
-            {
-                strncpy(resultado,bufferStr,max);
-                retorno=0;
-                break;
-            }
-            printf("%s 1",msgError);
-            (*reintentos)--;
-        }
-        while((*reintentos)>=0);
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un string y valida su tamaño y su contenido (solo letras)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param min intTamaño minimo del string
-* \param max intTamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param resultado char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) if Error [Invalid length, content or NULL pointer] - (0) if Ok
-*/
-
-int utn_getName(char* msg, char* msgError, int min, int max, int reintentos, char* resultado)
-{
-    int retorno=-1;
-    char bufferStr[max];
-
-    if(msg!=NULL && msgError!=NULL && min<=max && reintentos>=0 && resultado!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,min,max,&reintentos,bufferStr)) //==0
-            {
-                if(isValidName(bufferStr)==1)
-                {
-                    strncpy(resultado,bufferStr,max);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidName(char* stringRecibido)   //si fuera un numero podrìa necesitar parametros para validar max y min
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        //printf("%d",i);
-        if(stringRecibido[i]<'A' || (stringRecibido[i]>'Z' && stringRecibido[i]<'a') || stringRecibido[i]>'z')// o ((stringRecibido[i]<'A' || (stringRecibido[i]>'Z') && (stringRecibido[i]<'a' || stringRecibido[i]>'z'))
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un string y valida su tamaño y su contenido (numero sin signo)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input int* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getUnsignedInt(char* msg,char* msgError,int minSize,int maxSize,int reintentos,int* input)
-{
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidNumber(bufferStr)==1)
-                {
-                    *input=atoi(bufferStr);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidNumber(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if(stringRecibido[i]<'0' || stringRecibido[i]>'9')
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un numero y valida su tamaño y su contenido (numero con signo)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input int* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getSignedInt(char* msg, char* msgError, int minSize, int maxSize, int reintentos, int* input)
-{
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidSignedNumber(bufferStr)==1)
-                {
-                    *input=atoi(bufferStr); // atoi array to int
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidSignedNumber(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'0' || stringRecibido[i]>'9') && (stringRecibido[0]!='+' && stringRecibido[0]!='-'))
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un numero y valida su tamaño y su contenido (numero con decimales)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input float* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getFloat(char* msg, char* msgError, int minSize, int maxSize, int reintentos, float* input)
-{
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidFloatNumber(bufferStr)==1)
-                {
-                    *input=atof(bufferStr); // atof array to float
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidFloatNumber(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'0' || stringRecibido[i]>'9') && (stringRecibido[i]!='.'))
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un numero de telefono y valida su tamaño y su contenido (solo numeros, guiones o espacios)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getTelefono(char* msg, char* msgError, int minSize, int maxSize, int min, int max, int reintentos, char* input)
-{
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && min<max && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidTelephone(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidTelephone(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'0' || stringRecibido[i]>'9') && (stringRecibido[i]!='-' || stringRecibido[i]!=' '))
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un DNI y valida su tamaño y su contenido (solo numeros o puntos)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getDNI(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input)
-{
-    maxSize=11; //con puntos
-    minSize=8;  // sin puntos
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidDNI(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidDNI(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'0' || stringRecibido[i]>'9') && (stringRecibido[i]!='.'))
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
+	int ret=-1;
+	char bufferString[4096]; //le pongo de mas por las dudas.
 
 
-/** \brief Solicita el ingreso de un CUIT y valida su tamaño y su contenido (solo numeros y guiones)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getCUIT(char* msg, char* msgError, int reintentos, char* input)
-{
-    int maxSize=14; //con guiones 13 elementos
-    int minSize=11;  // sin puntos
-    int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidCUIT(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
-
-int isValidCUIT(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    int j;
-    char buffer[14];
-    strncpy(buffer,stringRecibido,14);
-
-    for(i=0;buffer[i]!='\0';i++)
-    {
-        if((buffer[i]<'0' || buffer[i]>'9') && (buffer[i]!='-')) // chequeo que solo sean numeros o -
-        {
-            retorno=0;
-            break;
-        }
-
-        if(buffer[i]=='-')  //elimino los -
-        {
-            for(j=i;buffer[j]!='\0';j++)
-            {
-                strncpy(&buffer[j],&buffer[j+1],1);
-            }
-        }
-    }
-
-    int digitos[10]={2,3,4,5,6,7,2,3,4,5};
-    int acumulado = 0;
-    int verificador;
-
-    for(i=0;i<strlen(buffer-1);i++)
-    {
-        acumulado+=buffer[i]*digitos[i];
-    }
-
-    verificador=11-(acumulado%11);
-	if(verificador == 11)
+	if(cadena!=NULL && leng>0)
 	{
-		verificador = 0;
+
+		fflush(stdin);
+		if(fgets(bufferString, sizeof(bufferString), stdin)!=NULL)
+		{
+
+			//si alguien apreto enter le pongo el \0
+			if(bufferString[strnlen(bufferString, sizeof(bufferString))-1]=='\n')
+			{
+				bufferString[strnlen(bufferString, sizeof(bufferString))-1]='\0';
+			}
+
+			//copio la cadena aux en mi array
+			if(strlen(bufferString)<=leng)
+			{
+				strncpy(cadena, bufferString, leng);
+				ret=0;
+			}
+		}
 	}
-
-	if(buffer[11]!=verificador)
-    {
-        retorno=0;
-    }
-
-    //if(stringRecibido[2]!='-' || stringRecibido[11]!='-' || stringRecibido[0]!='2' || stringRecibido[1]!='0' || stringRecibido[1]!='3' || stringRecibido[1]!='4' || stringRecibido[1]!='7')
-    return retorno;
+			return ret;
 }
 
-/** \brief Solicita el ingreso de una direccion de e-mail y valida su tamaño y su contenido
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
 
-int utn_getEmail(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input)
+/*
+ * \brief 	Lee de stdin hasta que encuentra un \n o hasta que haya copiado en cadena
+ * 			un maximo de len-1 caracteres.
+ * 	\param array puntero al array donde se copiara la cadena obtenida
+ * 	\param len es un entero que define el tamaño de la cadena
+ * 	\return retorna 0 en caso de Exito y -1 en caso de ERROR
+ * */
+static int getString(char* array, int len)
+{
+	int ret=-1;
+	char bufferString[ARRAY_LEN_STRING];
+	if(array!=NULL && len>0)
+	{
+		fflush(stdin);
+		if(fgets(bufferString,sizeof(bufferString),stdin)!=NULL)
+		{
+			if(bufferString[strnlen(bufferString,sizeof(bufferString))-1] == '\n')
+			{
+				bufferString[strnlen(bufferString,sizeof(bufferString))-1] = '\0';
+			}
+			if(strnlen(bufferString,sizeof(bufferString))<=len)
+			{
+				strncpy(array,bufferString,len);
+				ret=0;
+			}
+		}
+	}
+	return ret;
+}
+/**
+ * \brief Obtien un numero entero
+ * \param pResultado Puntero al espacio de memoria donde se dejara el resultado de la funcion
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR) si no
+ **/
+static int getInt(int* pResultado)
 {
     int retorno=-1;
-    char bufferStr[maxSize];
+    char bufferString[ARRAY_LEN_INT];
+    if( pResultado!=NULL &&
+    	!getString(bufferString,sizeof(bufferString)) &&
+    	esNumerica(bufferString,sizeof(bufferString)))
+	{
+		*pResultado = atoi(bufferString);
+		retorno=0;
 
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidEmail(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
+	}
     return retorno;
 }
-
-int isValidEmail(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'-' && stringRecibido[i]!='+') || (stringRecibido[i]>'9' && stringRecibido[i]<'@') ||
-           (stringRecibido[i]>'Z' && stringRecibido[i]!='_' && stringRecibido[i]<'a')|| stringRecibido[i]>'z')
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de un string y valida su tamaño y su contenido (texto)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getTexto(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input)
+/**
+ * \brief Obtiene un numero decimal
+ * \param pResultado Puntero al espacio de memoria donde se dejara el resultado de la funcion
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR) si no
+ **/
+static int getFloat(float* pResultado)
 {
     int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidTexto(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
+    char bufferString[ARRAY_LEN_INT];
+    if( pResultado!=NULL &&
+    	!getString(bufferString,sizeof(bufferString)) &&
+		esNumericaFloat(bufferString,sizeof(bufferString)))
+	{
+		*pResultado = atof(bufferString);
+		retorno=0;
+	}
     return retorno;
 }
-
-int isValidTexto(char* stringRecibido)
+/**
+ * \brief Obtiene un texto
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getTexto(char* pResultado, int longitud)
 {
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if(stringRecibido[i]<' ' || stringRecibido[i]>'z')
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
+	int res = -1;
+	char bufferString[ARRAY_LEN_STRING];
+	if(pResultado!=NULL && longitud>0)
+	{
+		if( !getString(bufferString,sizeof(bufferString)) &&
+		    esTexto(bufferString, sizeof(bufferString)))
+		{
+			strncpy(pResultado,bufferString,longitud);
+			res = 0;
+		}
+	}
+	return res;
 }
-
-/** \brief Solicita el ingreso de un valor alfanumerico y valida su tamaño y su contenido (solo numeros y letras)
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param minSize int Tamaño minimo del string
-* \param maxSize int Tamaño maximo del string Tamaño= elementos+1(\0)
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-
-int utn_getAlfanumerico(char* msg, char* msgError, int minSize, int maxSize, int reintentos, char* input)
+/**
+ * \brief Obtiene un nombre
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getNombre(char* pResultado, int longitud)
 {
     int retorno=-1;
-    char bufferStr[maxSize];
-
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
+    char buffer[ARRAY_LEN_NOMBRE];
+    if(pResultado!=NULL && longitud>0)
     {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidAlphanumeric(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
+    	if(	!getString(buffer,sizeof(buffer)) &&
+    		esNombre(buffer,sizeof(buffer)) &&
+			strnlen(buffer,sizeof(buffer))<longitud)
+    	{
+    		strncpy(pResultado,buffer,longitud);
+			retorno = 0;
+		}
     }
     return retorno;
 }
-
-int isValidAlphanumeric(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if(stringRecibido[i]<'0' || (stringRecibido[i]>'9' && stringRecibido[i]<'A') || (stringRecibido[i]>'Z' && stringRecibido[i]<'a') || stringRecibido[i]>'z' )
-        {
-            retorno=0;
-            break;
-        }
-    }
-    return retorno;
-}
-
-/** \brief Solicita el ingreso de una letra y valida su tamaño y su contenido
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param resultado char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-int utn_getLetra(char* msg, char* msgError, int reintentos, char* resultado)
+/**
+ * \brief Obtiene un Apellido
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getApellido(char* pResultado, int longitud)
 {
     int retorno=-1;
-    char bufferChar;
-    int min=1;
-    int max=sizeof(char)+1;
-
-    if(msg!=NULL && msgError!=NULL && min<=max && reintentos>=0 && resultado!=NULL)
+    char buffer[ARRAY_LEN_APELLIDO];
+    if(pResultado!=NULL && longitud>0)
     {
-        do
-        {
-            if(!getString(msg,msgError,min,max,&reintentos,&bufferChar)) //==0
-            {
-                if(isValidLetra(bufferChar)==1)
-                {
-                    *resultado=bufferChar;
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
+    	if(	!getString(buffer,sizeof(buffer)) &&
+    		esApellido(buffer,sizeof(buffer)) &&
+			strnlen(buffer,sizeof(buffer))<longitud)
+    	{
+    		strncpy(pResultado,buffer,longitud);
+			retorno=0;
+		}
     }
     return retorno;
 }
-
-int isValidLetra(char charRecibido)
+/**
+ * \brief Obtiene un Caracter
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getCaracter(char* pResultado, int longitud)
 {
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    if(charRecibido<'A' || (charRecibido>'Z' && charRecibido<'a') || charRecibido>'z')
-        retorno=0;
-    return retorno;
+	int retorno=-1;
+    char buffer[LEN_CHAR];
+	if(pResultado!=NULL && longitud>0)
+	{
+		if(	!getString(buffer,sizeof(buffer)) &&
+			esCaracter(buffer,sizeof(buffer)) &&
+			strnlen(buffer,sizeof(buffer))<longitud)
+		{
+			strncpy(pResultado,buffer,longitud);
+			retorno=0;
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Obtiene un DNI
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getDni(char* pResultado, int longitud)
+{
+	int res = -1;
+	char bufferString[ARRAY_LEN_DNI];
+	if( pResultado != NULL && longitud > 0 &&
+	    !getString(bufferString, sizeof(bufferString)) &&
+	    esDNI(bufferString, sizeof(bufferString)))
+	{
+		strncpy(pResultado, bufferString, longitud);
+		res = 0;
+	}
+	return res;
+}
+/**
+ * \brief Obtiene un CUIT
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getCuit(char* pResultado, int longitud)
+{
+	int res = -1;
+	char bufferString[ARRAY_LEN_CUIT];
+	if( pResultado != NULL && longitud > 0 &&
+	    !getString(bufferString, sizeof(bufferString)) &&
+	    esCUIT(bufferString, sizeof(bufferString)))
+	{
+		strncpy(pResultado, bufferString, longitud);
+		res = 0;
+	}
+	return res;
+}
+/**
+ * \brief Obtiene un Telefono
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getTelefono(char* pResultado, int longitud)
+{
+	int res = -1;
+	char bufferString[ARRAY_LEN_TEL];
+	if( pResultado != NULL && longitud > 0 &&
+	    !getString(bufferString, sizeof(bufferString)) &&
+	    esTelefono(bufferString,sizeof(bufferString)))
+	{
+		res = 0;
+		strncpy(pResultado,bufferString,longitud);
+	}
+	return res;
+}
+/**
+ * \brief Obtiene un Caracter que solo sea s o n, para validacion
+ * \param pResultado Puntero char al espacio de memoria donde se dejara el resultado de la funcion
+ * \param longitud entrero que marca la longitud de la cadena a ingresar.
+ * \return Retorna 0 (EXITO) si se obtiene un numero entero y -1 (ERROR)
+ **/
+static int getCaracterSN(char* pResultado, int longitud)
+{
+	int retorno=-1;
+    char buffer[LEN_CHAR];
+	if(pResultado!=NULL && longitud>0)
+	{
+		if(	!getString(buffer,sizeof(buffer)) &&
+			esCaracterSN(buffer,sizeof(buffer)) &&
+			strnlen(buffer,sizeof(buffer))<longitud)
+		{
+			strncpy(pResultado,buffer,longitud);
+			retorno=0;
+		}
+	}
+	return retorno;
+}
+/*********Estaticas Validaciones*********/
+
+static int esString(char string[], int leng)
+{
+	int ret=-1;
+	int i;
+	if(string!=NULL && leng>0)
+	{
+		ret=1; //verdadero, es una palabra
+
+		for(i=0; i<leng && string[i]!='\0'; i++)
+		{
+
+			if(string[i]>'z' || string[i]<'a' )
+			{ //si esta fuera de rango,devuelvo 0
+				ret=0;
+				break;
+			}
+		}//cierro for
+	}
+	return ret;
+}
+
+/**
+ * \brief Verifica si la cadena ingresada es numerica, admite solo enteros
+ * \param cadena Cadena de caracteres a ser analizada
+ * \return Retorna 1 (verdadero) si la cadena es numerica, 0 (falso) si no lo es y -1 en caso de error
+ **/
+static int esNumerica(char* cadena, int limite)
+{
+	int retorno=-1;
+	int i;
+	if(cadena!=NULL && limite>0)
+	{
+		retorno = 1;
+		for(i=0;i<limite&&cadena[i]!='\0';i++)
+		{
+			if(i==0 && (cadena[i]=='+' || cadena[i]=='-'))
+			{
+				continue;
+			}
+			if(cadena[i]<'0' || cadena[i]>'9')
+			{
+				retorno = 0;
+				printf("ERROR, Ingrese solo numeros enteros.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es numerica y admite comas
+ * \param cadena Cadena de caracteres a ser analizada
+ * \return Retorna 1 (verdadero) si la cadena es numerica, 0 (falso) si no lo es y -1 en caso de error
+ **/
+static int esNumericaFloat(char* cadena, int limite)
+{
+	int i=0;
+	int retorno = -1;
+	int contadorPuntos=0;
+
+	if(cadena != NULL && strlen(cadena) > 0)
+	{
+		retorno = 1;
+		for(i=0 ; cadena[i] != '\0'; i++)
+		{
+			if(i==0 && (cadena[i] == '-' || cadena[i] == '+'))
+			{
+				continue;
+			}
+			if(cadena[i] < '0' || cadena[i] > '9' )
+			{
+				if(cadena[i] == '.' && contadorPuntos == 0)
+				{
+					contadorPuntos++;
+				}
+				else
+				{
+					if(contadorPuntos>0)
+					{
+						retorno=0;
+						printf("El numero no puede contener mas de una coma.\n");
+						break;
+					}
+					retorno = 0;
+					printf("ERROR, Ingrese solo numeros.\n");
+					break;
+				}
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un texto valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un texto valido, 0 (falso) si no lo es.
+ **/
+static int esTexto(char* cadena,int longitud)
+{
+	int i=0;
+	int retorno = 1;
+	if(cadena!=NULL && longitud>0)
+	{
+		for(i=0;cadena[i]!='\0' && i<longitud;i++)
+		{
+			if((cadena[i] < 'A' || cadena[i] > 'Z' ) && (cadena[i] < 'a' || cadena[i] > 'z' ) &&
+			   (cadena[i] < '0' || cadena[i] > '9') && (cadena[i] != ' ') &&
+			   (cadena[i] != ',') && (cadena[i] != '.') &&
+			   (cadena[i] != '+') && (cadena[i] != '-') &&
+			   (cadena[i] != '?'))
+			{
+				retorno = 0;
+				printf("Error de validacion, usted ingreso un caracter no permitido.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un nombre valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esNombre(char* cadena,int longitud)
+{
+	int i=0;
+	int retorno = 1;
+	if(cadena != NULL && longitud > 0)
+	{
+		for(i=0 ; cadena[i] != '\0' && i < longitud; i++)
+		{
+			if((cadena[i]<'A' || cadena[i]>'Z') && (cadena[i]<'a' || cadena[i]>'z'))
+			{
+				retorno = 0;
+				printf("Error de validacion, usted ingreso un caracter no permitido.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un apellido valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esApellido(char* cadena,int longitud)
+{
+	int i=0;
+	int retorno=1;
+	if(cadena!=NULL && longitud>0)
+	{
+		for(i=0;cadena[i]!='\0' && i<longitud;i++)
+		{
+			if((cadena[i]<'A' || cadena[i]>'Z') && (cadena[i]<'a' || cadena[i]>'z') &&
+			   (cadena[i]!=' '))
+			{
+				retorno = 0;
+				printf("Error de validacion, usted ingreso un caracter no permitido.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un caracter valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esCaracter(char* cadena, int longitud)
+{
+	int i=0;
+	int retorno=1;
+	if(cadena!=NULL && longitud>0)
+	{
+		for(i=0;cadena[i]!='\0' && i<longitud; i++)
+		{
+			if((cadena[i]<'A' || cadena[i]>'Z' ) && (cadena[i]<'a' || cadena[i]>'z'))
+			{
+				retorno=0;
+				printf("Error de validacion, solo puede ingresar un caracter.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es la letra S o N
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esCaracterSN(char* cadena, int longitud)
+{
+	int i=0;
+	int retorno=1;
+	if(cadena!=NULL && longitud>0)
+	{
+		for(i=0;cadena[i]!='\0' && i<longitud; i++)
+		{
+			if(cadena[i]!='S' && cadena[i]!='N' && cadena[i]!='s' && cadena[i]!='n')
+			{
+				retorno=0;
+				printf("Error de validacion, solo puede ingresar S o N.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un DNI valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esDNI(char* cadena, int longitud)
+{
+	int i=0;
+	int retorno = 1;
+	long lengthCadena = strlen(cadena);
+	int contadorPuntos = 0;
+	if(cadena != NULL && longitud > 0)
+	{
+		for(i=0;cadena[i]!='\0'; i++)
+		{
+			//Menos de 6 numeros->ERROR
+			if(lengthCadena < 6)
+			{
+				retorno = 0;
+				if((cadena[i] < '0' || cadena[i] > '9'))
+				{
+					printf("El DNI no puede contener letras\n");
+					break;
+				}
+				else
+				{
+					printf("El DNI no puede tener menos de 6 numeros\n");
+					break;
+				}
+			}
+			//Contador de puntos
+			if(cadena[i]=='.')
+			{
+				contadorPuntos++;
+			}
+			//Si comienza con un punto ERROR
+			if(i==0 && cadena[i]=='.')
+			{
+				retorno = 0;
+				printf("El DNI no puede empezar con un punto\n");
+				break;
+			}
+			//Si contiene letras->ERROR
+			if((cadena[i] < '0' || cadena[i] > '9') && (cadena[i] != '.'))
+			{
+				retorno = 0;
+				printf("El DNI no puede contener letras\n");
+				break;
+			}
+		}
+	}
+	if(contadorPuntos == 0)
+	{
+		retorno = 0;
+		printf("El DNI debe contener puntos\n");
+	}
+	else if(contadorPuntos == 1)
+	{
+		retorno = 0;
+		printf("El DNI debe contener mas de un punto\n");
+	}
+	else if(contadorPuntos > 2)
+	{
+		retorno = 0;
+		printf("El DNI no puede contener mas de dos puntos\n");
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un CUIT valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esCUIT(char* cadena, int longitud)
+{
+	int i=0;
+	int retorno = 1;
+	long lengthCadena = strlen(cadena);
+	int contadorGuiones = 0;
+	if(cadena != NULL && longitud > 0)
+	{
+		for(i=0 ; cadena[i] != '\0'; i++)
+		{
+			//Contador de guiones
+			if(cadena[i]=='-')
+			{
+				contadorGuiones++;
+			}
+			//Menos de 13 numeros->ERROR
+			if(lengthCadena < 13)
+			{
+				retorno = 0;
+				if((cadena[i] < '0' || cadena[i] > '9') && (cadena[i] != '-'))
+				{
+					printf("El CUIT no puede contener letras\n");
+					break;
+				}
+				else
+				{
+					printf("El CUIT debe contener 11 numeros y dos guiones\n");
+					break;
+				}
+			}
+			//Si comienza con un guion ERROR
+			if(i==0 && cadena[i]=='-')
+			{
+				retorno = 0;
+				printf("El CUIT no puede empezar con un guion\n");
+				break;
+			}
+			//Si contiene letras->ERROR
+			if((cadena[i] < '0' || cadena[i] > '9') && (cadena[i] != '-'))
+			{
+				retorno = 0;
+				printf("El CUIT no puede contener letras, espacios ni caracteres especiales\n");
+				break;
+			}
+		}
+	}
+	if(contadorGuiones == 0)
+	{
+		retorno = 0;
+		printf("Respete el formato [xx-xxxxxxxx-x]\n");
+	}
+	else if(contadorGuiones == 1)
+	{
+		retorno = 0;
+		printf("Respete el formato [xx-xxxxxxxx-x]\n");
+	}
+	else if(contadorGuiones > 2)
+	{
+		retorno = 0;
+		printf("El CUIT no puede contener mas de dos guiones\n");
+	}
+	return retorno;
+}
+/**
+ * \brief Verifica si la cadena ingresada es un TELEFONO valido
+ * \param cadena char de caracteres a ser analizada
+ * \param longitud entero que marca la longitud de la cadena ingresada.
+ * \return Retorna 1 (verdadero) si la cadena es un nombre valido, 0 (falso) si no lo es.
+ **/
+static int esTelefono(char* cadena,int longitud)
+{
+	int i=0;
+	int retorno = 1;
+	long lengthCadena = strlen(cadena);
+	if(cadena!=NULL && longitud>0)
+	{
+		for(i=0;cadena[i]!='\0' && i<longitud; i++)
+		{
+			if(lengthCadena<=7)
+			{
+				retorno = 0;
+				printf("El telefono no puede contener menos de 8 numeros\n");
+				break;
+			}
+			if((cadena[i] < '0' || cadena[i] > '9') && (cadena[i] != ' ') &&
+			   (cadena[i] != '-'))
+			{
+				retorno = 0;
+				printf("Error de validacion, los telefonos solo contienen numeros, espacios y guiones medios.\n");
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+/*********GET*********/
+/*
+ * \brief Pide un numero al usuario dentro de un rango determinado
+ * \param pResultado: puntero a int donde se guarda el valor del dato a mostrar enm el main, el numero.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeerror: puntero a mensaje de error que se le pasa en caso de error.
+ * \param minimo y maximo: enteros donde se pasa el rango de numeros a tomar, el minimo aceptado y el maximo aceptado.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getNumero(int* pResultado, char* pMensaje, char* pMensajeError, int minimo, int maximo, int reintentos)
+{
+	int ret = -1;
+	int bufferInt;
+	int i;
+	for(i=0;i<=reintentos;i++){
+		if(pResultado!=NULL && pMensaje!=NULL && pMensajeError!=NULL && minimo<=maximo && reintentos>0)
+		{
+			printf("%s", pMensaje);
+			if(!getInt(&bufferInt))
+			{
+				if(bufferInt>=minimo && bufferInt<=maximo)
+				{
+					*pResultado = bufferInt;
+					ret = 0;
+					break;
+				}
+				else
+				{
+					printf("%s - Fuera de rango\n", pMensajeError);
+				}
+			}
+		}
+	}
+	return ret;
 }
 /*
-int utn_getChar(char* msg, char* msgError, int min, int max, int reintentos, char* resultado)
+ * \brief Pide un numero decimal al usuario dentro de un rango determinado
+ * \param pResultado: puntero a float donde se guarda el valor del dato a mostrar en el main, el numero.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param minimo y maximo: floats donde se pasa el rango de numeros a tomar, el minimo aceptado y el maximo aceptado.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getNumeroFlotante(float* pResultado, char* pMensaje, char* pMensajeError, int minimo, float maximo, float reintentos)
 {
-    int retorno=-1;
-    char bufferChar[256];
-
-    if(msg!=NULL && msgError!=NULL && min<=max && reintentos>=0 && resultado!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,1,3,&reintentos,bufferChar)) //==0
-            {
-                if(isValidChar(bufferChar[0])==1)
-                {
-                    printf("OK");
-                    *resultado=bufferChar[0];
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
+	int ret = -1;
+	float bufferFloat;
+	int i;
+	for(i=0;i<=reintentos;i++){
+		if(pResultado!=NULL && pMensaje!=NULL && pMensajeError!=NULL && minimo<=maximo && reintentos>0)
+		{
+			printf("%s", pMensaje);
+			if(!getFloat(&bufferFloat))
+			{
+				if(bufferFloat>=minimo && bufferFloat<=maximo)
+				{
+					*pResultado = bufferFloat;
+					ret = 0;
+					break;
+				}
+				else
+				{
+					printf("%s - Fuera de rango\n", pMensajeError);
+				}
+			}
+		}
+	}
+	return ret;
+}
+/*
+ * \brief Pide un texto al usuario.
+ * \param pResultado: puntero a char donde se guarda el dato a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getTexto(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	char bufferString[ARRAY_LEN_STRING];
+	int retorno = -1;
+	while(reintentos>=0)
+	{
+		reintentos--;
+		printf("%s",pMensaje);
+		if( !getTexto(bufferString,sizeof(bufferString)) &&
+			strnlen(bufferString,sizeof(bufferString))<longitud)
+		{
+			strncpy(pResultado,bufferString,longitud);
+			retorno=0;
+			break;
+		}
+		else
+		{
+			printf("%s",pMensajeError);
+		}
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un Nombre al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getNombre(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	char bufferString[ARRAY_LEN_NOMBRE];
+	int retorno=-1;
+	int i=0;
+	if(pResultado!=NULL && longitud>0 && pMensaje!=NULL && pMensajeError!=NULL && reintentos>0)
+	{
+		for(i=0;i<=reintentos;i++)
+		{
+			printf("%s",pMensaje);
+			if(	!getNombre(bufferString,sizeof(bufferString)) &&
+				strnlen(bufferString,sizeof(bufferString))<longitud)
+			{
+				strncpy(pResultado,bufferString,longitud);
+				retorno=0;
+				break;
+			}
+			printf("%s",pMensajeError);
+		}
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un Apellido al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getApellido(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	char bufferString[ARRAY_LEN_APELLIDO];
+	int retorno=-1;
+	int i=0;
+	if(pResultado!=NULL && pMensaje!=NULL && pMensajeError!=NULL && reintentos>0)
+	{
+		for(i=0;i<=reintentos;i++)
+		{
+			printf("%s", pMensaje);
+			if( !getApellido(bufferString,sizeof(bufferString)) &&
+				strnlen(bufferString,sizeof(bufferString))<longitud)
+			{
+				strncpy(pResultado,bufferString,longitud);
+				retorno=0;
+				break;
+			}
+			printf("%s",pMensajeError);
+		}
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un Caracter al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getCaracter(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	char bufferString[LEN_CHAR];
+	int retorno=-1;
+	int i=0;
+	if(pResultado!=NULL && pMensaje!=NULL && pMensajeError!=NULL && reintentos>0)
+	{
+		for(i=0;i<=reintentos;i++)
+		{
+			printf("%s",pMensaje);
+			if( !getCaracter(bufferString,sizeof(bufferString)) &&
+				strnlen(bufferString,sizeof(bufferString))<longitud )
+			{
+				strncpy(pResultado,bufferString,longitud);
+				retorno = 0;
+				break;
+			}
+			printf("%s",pMensajeError);
+		}
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un DNI al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getDni(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	int retorno = -1;
+	char bufferString[ARRAY_LEN_DNI];
+	while(reintentos>=0)
+	{
+		reintentos--;
+		printf("%s",pMensaje);
+		if(!getDni( bufferString,sizeof(bufferString)) &&
+				    strnlen(bufferString,sizeof(bufferString))<longitud)
+		{
+			strncpy(pResultado,bufferString,longitud);
+			retorno = 0;
+			break;
+		}
+		printf("%s",pMensajeError);
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un CUIL al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getCuil(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	int retorno = -1;
+	char bufferString[ARRAY_LEN_CUIT];
+	while(reintentos>=0)
+	{
+		reintentos--;
+		printf("%s",pMensaje);
+		if(!getCuit( bufferString,sizeof(bufferString)) &&
+				     strnlen(bufferString,sizeof(bufferString))<longitud)
+		{
+			strncpy(pResultado,bufferString,longitud);
+			retorno = 0;
+			break;
+		}
+		printf("%s",pMensajeError);
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un Telefono al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getTelefono(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	int retorno = -1;
+	char bufferString[ARRAY_LEN_TEL];
+	while(reintentos>=0)
+	{
+		reintentos--;
+		printf("%s",pMensaje);
+		if(!getTelefono( bufferString,sizeof(bufferString)) &&
+				         strnlen(bufferString,sizeof(bufferString))<longitud)
+		{
+			strncpy(pResultado,bufferString,longitud);
+			retorno = 0;
+			break;
+		}
+		printf("%s",pMensajeError);
+	}
+	return retorno;
+}
+/*
+ * \brief Pide un Caracter solo S o N al usuario.
+ * \param pResultado: puntero a char donde se guarda el valor a mostrar en el main.
+ * \param longitud entero que marca la longitud de la cadena a ingresar.
+ * \param pMensaje: puntero a char, donde se pasa el mensaje a mostrar.
+ * \param pMensajeError: puntero a mensaje de error que se le pasa en caso de error.
+ * \param reintentos: entero, es la cantidad de reintentos que tendra el usuario en caso de error.
+ * \return devuelve 0 en caso de Exito y -1 en caso de Error.
+ * */
+int utn_getCaracterSN(char* pResultado, int longitud,char* pMensaje, char* pMensajeError, int reintentos)
+{
+	char bufferString[LEN_CHAR];
+	int retorno=-1;
+	int i=0;
+	if(pResultado!=NULL && pMensaje!=NULL && pMensajeError!=NULL && reintentos>0)
+	{
+		for(i=0;i<=reintentos;i++)
+		{
+			printf("%s",pMensaje);
+			if( !getCaracterSN(bufferString,sizeof(bufferString)) &&
+				strnlen(bufferString,sizeof(bufferString))<longitud )
+			{
+				strncpy(pResultado,bufferString,longitud);
+				retorno = 0;
+				break;
+			}
+			printf("%s",pMensajeError);
+		}
+	}
+	return retorno;
 }
 
-int isValidChar(char charRecibido)
+//**********************************************************************************************************/
+
+int utn_getString(char *pResultado, int len, char* mensaje, char* mensajeError, int reintentos)
 {
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    if(charRecibido<'A' || (charRecibido>'Z' && charRecibido<'a') || charRecibido>'z')
-        retorno=0;
-    return retorno;
+
+	 int ret=-1;
+	 char bufferString[4000];
+
+
+	 if(pResultado!=NULL && mensaje!=NULL && mensajeError!=NULL && len>0)
+	 {
+	 while(reintentos>=0)
+	 {
+		 reintentos--;
+		 printf("%s", mensaje);
+
+		 if(myGets(bufferString, sizeof(bufferString))==0 &&esString(bufferString, sizeof(bufferString)))
+		 {
+
+			 strncpy(pResultado, bufferString, len);
+			 ret=0;
+			 break;
+		 }
+
+		 else
+		 {
+			 fflush(stdin);
+			 printf("%s", mensajeError);
+		 }
+	 }//cierro while
+	 };//cierro la validacion de los punteros.
+	 return ret;
 }
 
-*/
+//****************************************************************************************************************/
 
-/** \brief Solicita el ingreso de una fecha en formato dd/mm/yyyy y valida su tamaño y su contenido
-* \param msg char* Mensaje a mostrar al solicitar el string
-* \param msgError char* Mensaje de error a mostrar
-* \param reintentos int* Puntero a la cantidad de reintentos para ingresar el string solicitado
-* \param input char* Puntero a la variable donde se almacena el string ingresado
-* \return int Return (-1) si Error [tamaño o contenido invalido o NULL pointer] - (0) si Ok
-*/
-int utn_getDate(char* msg, char* msgError, int reintentos, char* input)
+int utn_getCadena(char *pResultado, char *mensaje, char *mensajeError,float minimo, float maximo, int reintentos)
 {
-    int maxSize=11;
-    int minSize=10;
-    int retorno=-1;
-    char bufferStr[maxSize];
 
-    if(msg!=NULL && msgError!=NULL && minSize<maxSize && reintentos>=0 && input!=NULL)
-    {
-        do
-        {
-            if(!getString(msg,msgError,minSize,maxSize,&reintentos,bufferStr)) //==0 sin errores !0
-            {
-                if(isValidDate(bufferStr)==1)
-                {
-                    strncpy(input,bufferStr,maxSize);
-                    retorno=0;
-                    break;
-                }
-                else
-                {
-                    printf("%s 2",msgError);
-                    reintentos--;
-                }
-            }
-        }
-        while(reintentos>=0);
-    }
-    return retorno;
-}
+	int retorno = -1;
+	char bufferCadena[101];
 
-int isValidDate(char* stringRecibido)
-{
-    int retorno=1;  // para las funciones isValid arranco con verdadero y cambio cuando encuentro un error
-    int i;
-    char buffer[4];
-    int contador=0;
-    int day;
-    int month;
-    int year;
+	do {
 
-    for(i=0;stringRecibido[i]!='\0';i++)
-    {
-        if((stringRecibido[i]<'0' || stringRecibido[i]>'9') && (stringRecibido[i]!='/')) // chequeo que solo sean numeros o /
-        {
-            retorno=0;
-            break;
-        }
+		printf("%s", mensaje);
+		fflush(stdin);
+		gets(bufferCadena);
 
-        if(stringRecibido[i]=='/')
-        {
-            contador++;
-        }
-    }
-    if(contador!=2)
-        retorno=0;
+		if (strlen(bufferCadena) >= minimo && strlen(bufferCadena) < maximo)
+		{
+			strcpy(pResultado, bufferCadena); //pResultado no hace falta ponerle el * porque como es cadena ya es puntero
+			retorno = 0;
+			break;
+		}
 
-    if(retorno==0)
-        printf("\nError de formato ");
-    else
-    {
-        for(i=0;i<2;i++)
-            strcpy(&buffer[i],&stringRecibido[i]);
+		printf("%s", mensajeError);
+		reintentos--;
 
-        day=atoi(buffer);
+	} while (reintentos <= 0);
 
-        for(i=3;i<5;i++)
-            strcpy(&buffer[i-3],&stringRecibido[i]);
-
-        month=atoi(buffer);
-
-        for(i=6;i<10;i++)
-            strcpy(&buffer[i-6],&stringRecibido[i]);
-
-        year=atoi(buffer);
-
-        if(day>31 || day<1 || month>12 || month<1 || year<1900 || year >2100)
-            retorno=0;
-        else if((month==4 || month==6 || month==9 || month==11) && day>30)
-            retorno=0;
-        else if(month==2 && day>29)
-            retorno=0;
-    }
-
-    return retorno;
+	return retorno;
 }

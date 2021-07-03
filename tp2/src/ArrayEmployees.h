@@ -1,5 +1,6 @@
-
-#define TEXT_SIZE 51
+#define LEN_SIZE 5
+#define LEN_NAME 100
+#define  LEN_LASTNAME 100
 
 #ifndef ARRAYEMPLOYEES_H_
 #define ARRAYEMPLOYEES_H_
@@ -9,10 +10,10 @@ typedef struct
     int idUnico;
     int isEmpty;
     //-----------------
-    char name[TEXT_SIZE];
+    char name[LEN_NAME];
     int sector;
     float salary;
-    char lastName[TEXT_SIZE];
+    char lastName[LEN_LASTNAME];
 
 }eVenta;
 

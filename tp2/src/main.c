@@ -5,6 +5,16 @@
  Version     :
  Copyright   : Your copyright notice
  Description : Hello World in C, Ansi-style
+
+-No admite nombres compuestos.#
+-No muestra nunca aquién se está modificando/dando de baja.
+-Al modificar hay un print que pide modificar el id.
+-Luego de modificar, dar de baja y de alta un nuevo empleado, se borran los restantes.
+-El programa comienza a comportarse de forma extraña y termina rompiendo en tiempo de
+ ejecución.
+-En una segunda ejecución de las pruebas no dio de alta al
+ último empleado, aunque se intentó varias veces.
+
  ============================================================================
  */
 
@@ -70,14 +80,15 @@ int main()
     do
     {
         menuPrincipal();
-        utn_getUnsignedInt("\nOpcion [1-5] ","\nError",1,sizeof(int),1,&opcion);
+        //utn_getUnsignedInt("\nOpcion [1-5] ","\nError",1,sizeof(int),1,&opcion);
+        utn_getNumero(&opcion,"\nOpcion [1-5] ","\nError",1,5,2);
         switch(opcion)
         {
             case 1: //Alta
             	if(addEmployees(arrayEmployee, QTY_ARRAY_TIPO, &contadorIdemployee)==0)
             	{
                    flag=1;
-            	}
+           	}
                 break;
 
             case 2: //Modificar
@@ -102,7 +113,8 @@ int main()
                 do
                 {
                     menuInformes();
-                    utn_getUnsignedInt(" ","\nError",1,sizeof(int),1,&opcionOrdenar);
+                    //utn_getUnsignedInt(" ","\nError",1,sizeof(int),1,&opcionOrdenar);
+                    utn_getNumero(&opcionOrdenar,"\nOpcion [1-3] ","\Error",1,3,2);
                     switch(opcionOrdenar)
                     {
                         case 1:
